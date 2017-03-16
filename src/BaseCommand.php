@@ -68,8 +68,8 @@ class BaseCommand extends Command
 		if($to) {
 			$rangeArg = escapeshellarg("$from..$to");
 		} else {
-			$rangeArg = escapeshellarg("$from");
-		}
+			$rangeArg = escapeshellarg("$from..");
+		}	
 
 		return array($lockFrom, $lockTo, $rangeArg);
 	}
