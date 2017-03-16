@@ -14,9 +14,9 @@ class BaseCommand extends Command
 	 */
 	protected function packagePaths()
 	{
-		$raw = trim(`composer show -i --path`);
+		$raw = trim(`composer show --path`);
 		if (!$raw) {
-			throw new \LogicException("'composer show -i --path' returned nothing");
+			throw new \LogicException("'composer show --path' returned nothing");
 		}
 
 		$output = array();
