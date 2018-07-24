@@ -31,7 +31,7 @@ class LogCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$argument = 'log --oneline';
+		$argument = 'log --oneline --no-merges';
 		$this->exec($argument, $input, $output);
 	}
 
