@@ -12,9 +12,10 @@ class BaseCommand extends Command
 	/**
 	 * Return a map of package name to path on disk
 	 */
-	protected function packagePaths()
+	protected function packagePaths($composerLock)
 	{
-		$raw = trim(`composer show --path`);
+	    $composerDir = dirname($composerLock);
+		$raw = trim(`composer show --path -d $composerDir`);
 		if (!$raw) {
 			throw new \LogicException("'composer show --path' returned nothing");
 		}
@@ -35,31 +36,33 @@ class BaseCommand extends Command
 	 */
 	protected function getGitArguments(InputInterface $input, OutputInterface $output)
 	{
+	    $gitSubPath = trim(`git rev-parse --show-prefix`);
+	    $composerLock = $input->getOption('composer-lock');
 		$from = $input->getArgument('sha-from');
 		$to = $input->getArgument('sha-to');
 
-		$fileArg = escapeshellarg("$from:composer.lock");
+		$fileArg = escapeshellarg("$from:$gitSubPath$composerLock");
 		$lockFrom = trim(`git show $fileArg`);
 		if(!$lockFrom) {
-			throw new \LogicException("composer.lock can't be found in $from");
+			throw new \LogicException("$composerLock can't be found in $from");
 		}
 
 		if($to) {
-			$fileArg = escapeshellarg("$to:composer.lock");
+			$fileArg = escapeshellarg("$to:$gitSubPath$composerLock");
 			$lockTo = trim(`git show $fileArg`);
 			if(!$lockTo) {
-				throw new \LogicException("composer.lock can't be found in $to");
+				throw new \LogicException("$composerLock can't be found in $to");
 			}
 		} else {
-			$fileArg = escapeshellarg("$from:composer.lock");
-			if(file_exists("composer.lock")) {
-				$lockTo = trim(file_get_contents("composer.lock"));
+			$fileArg = escapeshellarg("$from:$gitSubPath$composerLock");
+			if(file_exists($composerLock)) {
+				$lockTo = trim(file_get_contents($composerLock));
 				if(!$lockTo) {
-					throw new \LogicException("composer.lock is empty");
+					throw new \LogicException("$composerLock is empty");
 				}
 
 			} else {
-				throw new \LogicException("composer.lock can't be found in current folder");
+				throw new \LogicException("$composerLock can't be found");
 			}
 		}
 
@@ -117,7 +120,7 @@ class BaseCommand extends Command
 		$reposFrom = $this->reposFromLockfile($lockFrom);
 		$reposTo = $this->reposFromLockfile($lockTo);
 
-		$packagePaths = $this->packagePaths();
+		$packagePaths = $this->packagePaths($input->getOption('composer-lock'));
 
 		foreach ($reposTo as $package => $info) {
 			if (!isset($reposFrom[$package])) {
